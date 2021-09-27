@@ -6,18 +6,31 @@ import pymongo
 from pymongo import MongoClient
 import webbrowser
 from time import sleep
-from geopy.geocoders import Nominatim
-from urllib.request import urlopen
-import json
-import math
 
-
-con = pymongo.MongoClient("mongodb+srv://Maxence:Maxence@cluster0.srkjc.mongodb.net/cluster0?retryWrites=true&w=majority",ssl=True,ssl_cert_reqs=ssl.CERT_NONE)
-db = con.test
-database=con['stations']
-collection = database['vélo']
+liste_station= []
+def getVelo():
+    con = pymongo.MongoClient("mongodb+srv://Maxence:Maxence@cluster0.srkjc.mongodb.net/cluster0?retryWrites=true&w=majority",ssl=True,ssl_cert_reqs=ssl.CERT_NONE)
+    db = con.test
+    database=con['stations']
+    collection = database['vélo']
+    collection = db.test_collection # or collection = db['test-collection']
+    #if(np.size(database['vélo'])==0):
+    for m in range (np.size(liste_station)):
+        db.getCollections('vélo').insertOne({"name": liste_station[m][0], "localisation":liste_station[m][1], "State":liste_station[m][2],"Available_bikes":liste_station[m][3],"Available_stands":liste_station[m][4]})
+    """else:
+        for m in range (np.size(liste_station)):
+            db['vélo'].updateOne({
+                { "name": liste_station[m][0]},
+                { set:
+                 {
+                 "localisation": liste_station[m][1],
+                 "State":liste_station[m][2],
+                 "Size":liste_station[m][3]
+                 }
+                } 
+                }
+            )"""
 def getRefresh():
-    liste_station= []
     urlL= "https://opendata.lillemetropole.fr/api/records/1.0/search/?dataset=vlille-realtime&q=&facet=libelle&facet=nom&facet=commune&facet=etat&facet=type&facet=etatconnexion&rows=1000"
     responseL = requests.request("GET",urlL)
     response_jsonL= json.loads(responseL.text.encode('utf8'))
@@ -57,41 +70,11 @@ def getRefresh():
                 liste_newliste.append(False)            
             liste_newliste.append(i['available_bikes'])
             liste_newliste.append(i['available_bike_stands'])
-            liste_station.append(liste_newliste)
+            
             #print(liste_newliste)
-   
-
-    
-    #remplissage de la bdd
-    """for m in range (len(liste_station)):    
-       collection.insert_one({"name": liste_station[m][0],"localisation":liste_station[m][1],"State":liste_station[m][2],"Available_bikes":liste_station[m][3],"Available_stands":liste_station[m][4]})
-        """          
-    #update de la bdd    
-    for i in range (len(liste_station)):
-        collection.update_one(
-                { "name": liste_station[i][0]},
-                { "$set":
-                 {
-                 "localisation": liste_station[i][1],
-                 "State":liste_station[i][2],
-                 "Available_bikes":liste_station[i][3],
-                 "Available_stands":liste_station[i][4]
-                 }
-                } 
-                
-            )
-    return response_jsonS.get("records",[])
-
-def getSearch():
-     for i in range (len(liste_station)):
-         collection.find({'geometry':{
-             "$near":{
-                 "$geometry":{
-                     type: "Point"}}}})
-         
-def getInit():
-     getRefresh()
-     
+            liste_station.append(liste_newliste)
+ 
 while True:
-    getInit()
-    sleep(300)
+    getRefresh() 
+    getVelo()
+   # sleep(300)
