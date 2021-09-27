@@ -27,7 +27,7 @@ def getRefresh():
         for l in range(np.size(K['fields'])) :
             liste_newliste=[]
             liste_newliste.append(K['fields']['nom'])
-            liste_newliste.append(K['fields']['localisation'])
+            liste_newliste.append({"type": "Point", "coordinates":K['fields']['localisation']})
             if K['fields']['etat'] == 'EN SERVICE':
                 liste_newliste.append(True)
             else :
@@ -50,7 +50,7 @@ def getRefresh():
             loc_liste=[]
             loc_liste.append(i['lat'])
             loc_liste.append(i['lon'])
-            liste_newliste.append(loc_liste)
+            liste_newliste.append({"type": "Point", "coordinates":loc_liste})
             if i['etat'] == '':
                 liste_newliste.append(True)
             else :
@@ -59,14 +59,10 @@ def getRefresh():
             liste_newliste.append(i['available_bike_stands'])
             liste_station.append(liste_newliste)
             #print(liste_newliste)
-   
-
-    
     #remplissage de la bdd
     """for m in range (len(liste_station)):    
-       collection.insert_one({"name": liste_station[m][0],"localisation":liste_station[m][1],"State":liste_station[m][2],"Available_bikes":liste_station[m][3],"Available_stands":liste_station[m][4]})
-        """          
-    #update de la bdd    
+       collection.insert_one({"name": liste_station[m][0],"localisation":liste_station[m][1],"State":liste_station[m][2],"Available_bikes":liste_station[m][3],"Available_stands":liste_station[m][4]})           
+    #update de la bdd    """
     for i in range (len(liste_station)):
         collection.update_one(
                 { "name": liste_station[i][0]},
@@ -83,15 +79,35 @@ def getRefresh():
     return response_jsonS.get("records",[])
 
 def getSearch():
-     for i in range (len(liste_station)):
-         collection.find({'geometry':{
-             "$near":{
-                 "$geometry":{
-                     type: "Point"}}}})
-         
+    doc = collection.find({'localisation': { "$near": {"$geometry": {"type": "Point" ,"coordinates": [ 50.634512, 3.049339 ]},"$maxDistance": 300,"$minDistance": 0}}})
+    print(list(doc))
+
+def UpDelete():
+  choice = input("Voulez-vous rafraîchir (U) une station ou la détruire (D)?")
+  if (choice== "U"):
+        choiceStation= input("Quelle station choisissez-vous?")
+        #collection.find{}
+  """ collection.update_one(
+                { "name": choiceStation},
+                { "$set":
+                 {
+                 "localisation": liste_station[i][1],
+                 "State":liste_station[i][2],
+                 "Available_bikes":liste_station[i][3],
+                 "Available_stands":liste_station[i][4]
+                 }
+                }
+        )   """       
 def getInit():
      getRefresh()
-     
-while True:
+def getSearchStation():
+    choice = input("Recherche station : ")
+    doc = collection.find({"name" : {"$regex": choice}})
+    print (list(doc))
+    
+getInit()
+getSearchStation()
+getSearch()
+"""while True:
     getInit()
-    sleep(300)
+    sleep(300)"""
